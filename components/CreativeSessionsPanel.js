@@ -32,8 +32,11 @@ export default function CreativeSessionsPanel() {
     () => (Array.isArray(sessions) ? sessions : []),
     [sessions]
   );
-  // eslint-disable-next-line react-hooks/purity
-  const nowTs = useMemo(() => Date.now(), []);
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTs(Date.now()), 60000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (safeSessions.length > 0) {

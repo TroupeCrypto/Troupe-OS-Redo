@@ -1,7 +1,7 @@
 // components/MoneySnapshotPanel.js
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePersistentState } from "../lib/usePersistentState";
 import { useEventLog } from "../lib/useEventLog";
 
@@ -66,8 +66,11 @@ export default function MoneySnapshotPanel() {
 
   const lastHistory = snapshot.history?.slice(-1)[0];
   const currentTotal = Object.values(totals).reduce((a, b) => a + b, 0);
-  // eslint-disable-next-line react-hooks/purity
-  const nowTs = useMemo(() => Date.now(), []);
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTs(Date.now()), 60000);
+    return () => window.clearInterval(id);
+  }, []);
   const delta24 =
     lastHistory && nowTs - new Date(lastHistory.ts).getTime() <= 86400000
       ? currentTotal - lastHistory.total

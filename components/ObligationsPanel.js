@@ -3,7 +3,7 @@
 
 import { useDailyPersistentState } from "../lib/useDailyPersistentState";
 import { useEventLog } from "../lib/useEventLog";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const makeId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
@@ -25,8 +25,11 @@ export default function ObligationsPanel() {
   const [legalTag, setLegalTag] = useState("");
   const [amount, setAmount] = useState("");
   const [uploadingId, setUploadingId] = useState(null);
-  // eslint-disable-next-line react-hooks/purity
-  const nowTs = useMemo(() => Date.now(), []);
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTs(Date.now()), 60000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const safeItems = useMemo(
     () => (Array.isArray(items) ? items : []),
