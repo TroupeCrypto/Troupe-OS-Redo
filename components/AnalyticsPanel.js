@@ -98,7 +98,10 @@ export default function AnalyticsPanel() {
                   </span>
                   <span className="text-[11px] opacity-70">
                     Energy:{" "}
-                    {row.energy != null ? row.energy : "—"} · Sessions:{" "}
+                    {row.energy !== null && row.energy !== undefined
+                      ? row.energy
+                      : "—"}{" "}
+                    · Sessions:{" "}
                     {row.sessions}
                   </span>
                 </div>
