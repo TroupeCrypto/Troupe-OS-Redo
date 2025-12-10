@@ -8,6 +8,7 @@ import HistoryViewerPanel from "../components/HistoryViewerPanel";
 import CreativeSessionsPanel from "../components/CreativeSessionsPanel";
 import DailyMoneyLedgerPanel from "../components/DailyMoneyLedgerPanel";
 import HealthEnergyPanel from "../components/HealthEnergyPanel";
+import SystemPanel from "../components/SystemPanel";
 
 export default function HomePage() {
   return (
@@ -132,7 +133,7 @@ export default function HomePage() {
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Cash &amp; Accounts
             </h3>
-            <p className="text:[11px] opacity-60 mb-1">
+            <p className="text-[11px] opacity-60 mb-1">
               Manual inputs → later: live sync
             </p>
             <p className="text-sm opacity-80 max-w-xs">
@@ -195,6 +196,11 @@ export default function HomePage() {
       <section className="border-b border-white/40">
         <ScratchpadPanel />
         <HistoryViewerPanel />
+      </section>
+
+      {/* System */}
+      <section className="border-b border-white/40">
+        <SystemPanel />
       </section>
 
       {/* Bottom Navigation Bar */}
