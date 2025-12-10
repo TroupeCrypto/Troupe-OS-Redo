@@ -18,7 +18,15 @@ import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
 export default function HomePage() {
   const [unlocked, setUnlocked] = useState(false);
-  const { mode, setMode, roles } = useRoleMode();
+  const { mode, setMode } = useRoleMode();
+
+  const handleUnlock = ({ profileId, roleMode } = {}) => {
+    setUnlocked(true);
+    if (roleMode) {
+      setMode(roleMode);
+    }
+    // profileId is available if you later want per-profile behavior
+  };
 
   const scrollToSection = (id) => {
     if (typeof document === "undefined") return;
@@ -30,7 +38,7 @@ export default function HomePage() {
   if (!unlocked) {
     return (
       <main className="min-h-screen bg-black text-white">
-        <AuthGatePanel onUnlock={() => setUnlocked(true)} />
+        <AuthGatePanel onUnlock={handleUnlock} />
       </main>
     );
   }
