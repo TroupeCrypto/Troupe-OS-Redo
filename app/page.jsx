@@ -1,7 +1,7 @@
 // app/page.jsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import TodayFocusPanel from "../components/TodayFocusPanel";
 import ObligationsPanel from "../components/ObligationsPanel";
@@ -17,17 +17,55 @@ import AuthGatePanel from "../components/AuthGatePanel";
 import AuditLogPanel from "../components/AuditLogPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
+const SESSION_KEY = "troupe_os_auth_session_expiry";
+
 export default function HomePage() {
   const [unlocked, setUnlocked] = useState(false);
+  const [sessionExpiry, setSessionExpiry] = useState(null);
   const { mode, setMode } = useRoleMode();
+
+  // Honor any active session created by AuthGatePanel
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(SESSION_KEY);
+      if (!stored) return;
+      const expiry = Number(stored);
+      if (!Number.isFinite(expiry)) return;
+
+      setSessionExpiry(expiry);
+      if (Date.now() < expiry) {
+        setUnlocked(true);
+      }
+    } catch (err) {
+      console.error("Failed to load auth session in HomePage", err);
+    }
+  }, []);
 
   const handleUnlock = ({ profileId, roleMode } = {}) => {
     setUnlocked(true);
     if (roleMode) {
       setMode(roleMode);
     }
+    // Mirror the session expiry set by AuthGatePanel
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem(SESSION_KEY);
+        const expiry = stored ? Number(stored) : null;
+        if (Number.isFinite(expiry)) {
+          setSessionExpiry(expiry);
+        }
+      } catch {
+        // ignore
+      }
+    }
     // profileId is available if you later want per-profile behavior
   };
+
+  const sessionRemainingSeconds =
+    sessionExpiry != null
+      ? Math.max(0, Math.floor((sessionExpiry - Date.now()) / 1000))
+      : null;
 
   const scrollToSection = (id) => {
     if (typeof document === "undefined") return;
@@ -94,6 +132,9 @@ export default function HomePage() {
             Troupe OS · Control Surface
           </p>
           <p className="text-xs opacity-60 mt-1">System Online · v0.1</p>
+          <p className="mt-1 text-[10px] opacity-60">
+            Mode: {mode.toLowerCase()}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="text-[11px] opacity-60 tracking-[0.25em] uppercase">
@@ -116,6 +157,11 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+          {sessionRemainingSeconds != null && (
+            <div className="text-[10px] opacity-70">
+              Session ≈ {Math.floor(sessionRemainingSeconds / 60)} min left
+            </div>
+          )}
         </div>
       </header>
 
@@ -135,9 +181,6 @@ export default function HomePage() {
               First Goal: One Reliable Control Screen
             </span>
           </div>
-          <p className="mt-2 text-[10px] opacity-60">
-            Mode: {mode.toLowerCase()}
-          </p>
         </div>
       </section>
 
