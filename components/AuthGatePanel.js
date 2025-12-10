@@ -72,10 +72,12 @@ export default function AuthGatePanel({ onUnlock }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isWebAuthnAvailable, setIsWebAuthnAvailable] = useState(false);
   const [sessionExpiresAt, setSessionExpiresAt] = useState(null);
+
+  // Security context / policy knobs
   const [geoTag, setGeoTag] = useState("LOCAL");
   const [allowedGeo, setAllowedGeo] = useState("LOCAL");
-  const [windowStart, setWindowStart] = useState("05:00");
-  const [windowEnd, setWindowEnd] = useState("23:00");
+  const [windowStart, setWindowStart] = useState("00:00"); // full day by default
+  const [windowEnd, setWindowEnd] = useState("23:59");
   const [threatLevel, setThreatLevel] = useState("normal");
 
   const [pass1, setPass1] = useState("");
@@ -155,33 +157,77 @@ export default function AuthGatePanel({ onUnlock }) {
     }
   };
 
-  const sessionAllowed = () => {
+  // Evaluate security constraints for this request
+  const evaluateSessionConstraints = () => {
+    const nowMs = Date.now();
+
+    // If a session is already active, allow without re-checking policy.
+    if (sessionExpiresAt && nowMs < sessionExpiresAt) {
+      return { allowed: true, reason: null };
+    }
+
+    // Threat lockdown is hard stop
     if (threatLevel === "lockdown") {
-      setError("Threat lockdown active.");
-      return false;
+      return { allowed: false, reason: "Threat lockdown active." };
     }
-    if (geoTag !== allowedGeo) {
-      setError("Outside geo-fence.");
-      return false;
+
+    // Geo-fence: only enforce when both sides are non-empty
+    const geo = (geoTag || "").trim();
+    const allowed = (allowedGeo || "").trim();
+    if (geo && allowed && geo !== allowed) {
+      return { allowed: false, reason: "Outside geo-fence." };
     }
-    const now = new Date();
-    const [startH, startM] = windowStart.split(":").map(Number);
-    const [endH, endM] = windowEnd.split(":").map(Number);
-    const start = new Date(now);
-    start.setHours(startH, startM, 0, 0);
-    const end = new Date(now);
-    end.setHours(endH, endM, 0, 0);
-    if (now < start || now > end) {
-      setError("Outside access window.");
-      return false;
+
+    // Time window: only enforce when both times are set
+    const startStr = (windowStart || "").trim();
+    const endStr = (windowEnd || "").trim();
+    if (startStr && endStr) {
+      const now = new Date();
+      const [startH = 0, startM = 0] = startStr.split(":").map((n) => Number(n) || 0);
+      const [endH = 23, endM = 59] = endStr.split(":").map((n) => Number(n) || 0);
+
+      const start = new Date(now);
+      start.setHours(startH, startM, 0, 0);
+      const end = new Date(now);
+      end.setHours(endH, endM, 0, 0);
+
+      let inWindow = false;
+
+      if (end.getTime() === start.getTime()) {
+        // Same time -> treat as full day (no restriction)
+        inWindow = true;
+      } else if (end > start) {
+        // Normal same-day window
+        inWindow = now >= start && now <= end;
+      } else {
+        // Overnight window (e.g., 23:00–05:00)
+        inWindow = now >= start || now <= end;
+      }
+
+      if (!inWindow) {
+        return { allowed: false, reason: "Outside access window." };
+      }
     }
-    return true;
+
+    return { allowed: true, reason: null };
+  };
+
+  const requireSessionAllowed = () => {
+    const { allowed, reason } = evaluateSessionConstraints();
+    if (!allowed && reason) {
+      setError(reason);
+    }
+    return allowed;
   };
 
   const markSession = (roleMode) => {
-    const expiry = Date.now() + 30 * 60 * 1000;
+    const expiry = Date.now() + 30 * 60 * 1000; // 30 minutes
     setSessionExpiresAt(expiry);
-    window.localStorage.setItem(SESSION_KEY, `${expiry}`);
+    try {
+      window.localStorage.setItem(SESSION_KEY, `${expiry}`);
+    } catch (err) {
+      console.error("Failed to persist auth session", err);
+    }
     onUnlock({ profileId: activeProfileId, roleMode });
   };
 
@@ -219,7 +265,7 @@ export default function AuthGatePanel({ onUnlock }) {
   const handleSetPasscode = async (e) => {
     e.preventDefault();
     setError("");
-    if (!sessionAllowed()) return;
+    if (!requireSessionAllowed()) return;
 
     const trimmed1 = pass1.trim();
     const trimmed2 = pass2.trim();
@@ -260,7 +306,7 @@ export default function AuthGatePanel({ onUnlock }) {
   const handleEnterPasscode = async (e) => {
     e.preventDefault();
     setError("");
-    if (!sessionAllowed()) return;
+    if (!requireSessionAllowed()) return;
 
     const trimmed = inputPass.trim();
     if (!trimmed) {
@@ -273,9 +319,9 @@ export default function AuthGatePanel({ onUnlock }) {
       if (hash === activeProfile.passcodeHash) {
         appendAuditEntry({
           profileId: activeProfileId,
-        method: "unlock-passcode",
-        success: true,
-      });
+          method: "unlock-passcode",
+          success: true,
+        });
         markSession(activeProfile.roleMode);
       } else {
         setError("Incorrect passcode.");
@@ -298,7 +344,7 @@ export default function AuthGatePanel({ onUnlock }) {
 
   const handleBiometricUnlock = async () => {
     setError("");
-    if (!sessionAllowed()) return;
+    if (!requireSessionAllowed()) return;
     if (!isWebAuthnAvailable) {
       setError("Device unlock not supported in this browser.");
       return;
@@ -436,45 +482,46 @@ export default function AuthGatePanel({ onUnlock }) {
 
         {!hasPasscode ? (
           <>
-          <p className="text-[11px] opacity-70 mb-2">
-            Set a passcode for <span className="font-semibold">{activeProfile.label}</span>{" "}
-            on this device.
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-[11px] mb-2">
-            <label className="flex items-center gap-2">
-              Role
-              <select
-                value={activeProfile.roleMode}
-                onChange={(e) =>
-                  updateProfile(activeProfileId, { roleMode: e.target.value })
-                }
-                className="bg-black/60 border border-white/30 px-2 py-1 text-[11px]"
-              >
-                {DEFAULT_PROFILES.map((p) => (
-                  <option key={p.roleMode} value={p.roleMode}>
-                    {p.roleMode}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2">
-              Threat
-              <select
-                value={threatLevel}
-                onChange={(e) => setThreatLevel(e.target.value)}
-                className="bg-black/60 border border-white/30 px-2 py-1 text-[11px]"
-              >
-                <option value="normal">Normal</option>
-                <option value="elevated">Elevated</option>
-                <option value="lockdown">Lockdown</option>
-              </select>
-            </label>
-          </div>
-          <form onSubmit={handleSetPasscode} className="space-y-3">
-            <div>
-              <label className="block text-[11px] tracking-[0.18em] uppercase opacity-70 mb-1">
-                Passcode
+            <p className="text-[11px] opacity-70 mb-2">
+              Set a passcode for{" "}
+              <span className="font-semibold">{activeProfile.label}</span>{" "}
+              on this device.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-[11px] mb-2">
+              <label className="flex items-center gap-2">
+                Role
+                <select
+                  value={activeProfile.roleMode}
+                  onChange={(e) =>
+                    updateProfile(activeProfileId, { roleMode: e.target.value })
+                  }
+                  className="bg-black/60 border border-white/30 px-2 py-1 text-[11px]"
+                >
+                  {DEFAULT_PROFILES.map((p) => (
+                    <option key={p.roleMode} value={p.roleMode}>
+                      {p.roleMode}
+                    </option>
+                  ))}
+                </select>
               </label>
+              <label className="flex items-center gap-2">
+                Threat
+                <select
+                  value={threatLevel}
+                  onChange={(e) => setThreatLevel(e.target.value)}
+                  className="bg-black/60 border border-white/30 px-2 py-1 text-[11px]"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="elevated">Elevated</option>
+                  <option value="lockdown">Lockdown</option>
+                </select>
+              </label>
+            </div>
+            <form onSubmit={handleSetPasscode} className="space-y-3">
+              <div>
+                <label className="block text-[11px] tracking-[0.18em] uppercase opacity-70 mb-1">
+                  Passcode
+                </label>
                 <input
                   type="password"
                   value={pass1}
@@ -510,7 +557,8 @@ export default function AuthGatePanel({ onUnlock }) {
         ) : (
           <>
             <p className="text-[11px] opacity-70 mb-2">
-              Unlock <span className="font-semibold">{activeProfile.label}</span> view.
+              Unlock{" "}
+              <span className="font-semibold">{activeProfile.label}</span> view.
             </p>
             <div className="grid grid-cols-2 gap-2 text-[11px] mb-2">
               <label className="flex items-center gap-2">
@@ -582,7 +630,9 @@ export default function AuthGatePanel({ onUnlock }) {
               </p>
             </form>
             <div className="mt-3 text-[11px] space-y-1">
-              <p>Geo: {geoTag} (allowed: {allowedGeo})</p>
+              <p>
+                Geo: {geoTag} (allowed: {allowedGeo})
+              </p>
               <div className="flex gap-1">
                 <input
                   value={geoTag}
