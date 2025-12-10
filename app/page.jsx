@@ -14,6 +14,7 @@ import HealthEnergyPanel from "../components/HealthEnergyPanel";
 import SystemPanel from "../components/SystemPanel";
 import AnalyticsPanel from "../components/AnalyticsPanel";
 import AuthGatePanel from "../components/AuthGatePanel";
+import AuditLogPanel from "../components/AuditLogPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
 export default function HomePage() {
@@ -315,6 +316,7 @@ export default function HomePage() {
       {showSystem && (
         <section id="section-system" className="border-b border-white/40">
           <SystemPanel />
+          <AuditLogPanel />
         </section>
       )}
 
