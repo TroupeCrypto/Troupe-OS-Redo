@@ -1,4 +1,5 @@
 // app/page.jsx
+"use client";
 
 import TodayFocusPanel from "../components/TodayFocusPanel";
 import ObligationsPanel from "../components/ObligationsPanel";
@@ -12,10 +13,20 @@ import SystemPanel from "../components/SystemPanel";
 import AnalyticsPanel from "../components/AnalyticsPanel";
 
 export default function HomePage() {
+  const scrollToSection = (id) => {
+    if (typeof document === "undefined") return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <main className="min-h-screen bg-black text-white">
       {/* Top Bar */}
-      <header className="border-b border-white/40 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
+      <header
+        id="section-top"
+        className="border-b border-white/40 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between"
+      >
         <div>
           <p className="text-[11px] tracking-[0.25em] uppercase opacity-70">
             Troupe OS · Control Surface
@@ -28,7 +39,7 @@ export default function HomePage() {
       </header>
 
       {/* Active Workspace / Today */}
-      <section className="border-b border-white/40">
+      <section id="section-today" className="border-b border-white/40">
         <div className="px-4 py-3 sm:px-6 sm:py-4">
           <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
             Active Workspace
@@ -70,7 +81,7 @@ export default function HomePage() {
       </section>
 
       {/* Creative Studio */}
-      <section className="border-b border-white/40">
+      <section id="section-creative" className="border-b border-white/40">
         <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
@@ -115,7 +126,7 @@ export default function HomePage() {
       </section>
 
       {/* Money Overview */}
-      <section className="border-b border-white/40">
+      <section id="section-money" className="border-b border-white/40">
         <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
@@ -177,7 +188,7 @@ export default function HomePage() {
       </section>
 
       {/* Health & Energy */}
-      <section className="border-b border-white/40">
+      <section id="section-health" className="border-b border-white/40">
         <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
@@ -194,37 +205,59 @@ export default function HomePage() {
       </section>
 
       {/* Notes & History */}
-      <section className="border-b border-white/40">
+      <section id="section-notes" className="border-b border-white/40">
         <ScratchpadPanel />
         <HistoryViewerPanel />
       </section>
 
       {/* Analytics */}
-      <AnalyticsPanel />
+      <section id="section-analytics" className="border-b border-white/40">
+        <AnalyticsPanel />
+      </section>
 
       {/* System */}
-      <section className="border-b border-white/40">
+      <section id="section-system" className="border-b border-white/40">
         <SystemPanel />
       </section>
 
       {/* Bottom Navigation Bar */}
       <footer className="sticky bottom-0 border-t border-white/40 bg-black/95 backdrop-blur px-2 py-2 flex justify-center">
         <nav className="flex gap-1 text-[11px]">
-          <span className="px-3 py-1 border border-white/80 rounded-full tracking-[0.18em] uppercase">
+          <button
+            type="button"
+            onClick={() => scrollToSection("section-today")}
+            className="px-3 py-1 border border-white/80 rounded-full tracking-[0.18em] uppercase"
+          >
             Today
-          </span>
-          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection("section-money")}
+            className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70"
+          >
             Money
-          </span>
-          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection("section-creative")}
+            className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70"
+          >
             Creative Studio
-          </span>
-          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection("section-health")}
+            className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70"
+          >
             Health &amp; Energy
-          </span>
-          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection("section-system")}
+            className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70"
+          >
             System
-          </span>
+          </button>
         </nav>
       </footer>
     </main>
