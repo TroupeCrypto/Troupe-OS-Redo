@@ -7,6 +7,7 @@ import MoneySnapshotPanel from "../components/MoneySnapshotPanel";
 import HistoryViewerPanel from "../components/HistoryViewerPanel";
 import CreativeSessionsPanel from "../components/CreativeSessionsPanel";
 import DailyMoneyLedgerPanel from "../components/DailyMoneyLedgerPanel";
+import HealthEnergyPanel from "../components/HealthEnergyPanel";
 
 export default function HomePage() {
   return (
@@ -125,14 +126,13 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* High-level structure description */}
         <div className="border-t border-white/40 grid grid-cols-1 md:grid-cols-3">
           {/* Cash & Accounts */}
           <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Cash &amp; Accounts
             </h3>
-            <p className="text-[11px] opacity-60 mb-1">
+            <p className="text:[11px] opacity-60 mb-1">
               Manual inputs → later: live sync
             </p>
             <p className="text-sm opacity-80 max-w-xs">
@@ -170,11 +170,25 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Local snapshot panel */}
         <MoneySnapshotPanel />
-
-        {/* Daily ledger (per-day money movements) */}
         <DailyMoneyLedgerPanel />
+      </section>
+
+      {/* Health & Energy */}
+      <section className="border-b border-white/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
+              Health &amp; Energy
+            </p>
+            <h2 className="text-lg sm:text-xl">Body · Battery · Mood</h2>
+          </div>
+          <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
+            Local Only · v0.1
+          </p>
+        </div>
+
+        <HealthEnergyPanel />
       </section>
 
       {/* Notes & History */}
