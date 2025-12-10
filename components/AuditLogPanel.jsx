@@ -1,5 +1,6 @@
 // components/AuditLogPanel.jsx
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect -- hydrate audit events from localStorage on mount */
 
 import { useEffect, useState } from "react";
 

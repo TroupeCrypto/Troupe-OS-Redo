@@ -3,18 +3,48 @@
 
 import { useState, useMemo } from "react";
 import { useDailyPersistentState } from "../lib/useDailyPersistentState";
+import { useEventLog } from "../lib/useEventLog";
+
+const SUBCATEGORIES = [
+  "Income",
+  "Expenses",
+  "Transfers",
+  "Investing",
+  "Bills",
+];
+
+const AUTO_RULES = [
+  { match: ["salary", "sale", "invoice"], category: "Income" },
+  { match: ["rent", "utility", "bill"], category: "Bills" },
+  { match: ["transfer"], category: "Transfers" },
+  { match: ["stock", "crypto"], category: "Investing" },
+];
 
 export default function DailyMoneyLedgerPanel() {
   const [entries, setEntries, isHydrated, todayKey] =
     useDailyPersistentState("money_ledger", []);
+  const { appendEvent } = useEventLog();
 
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
   const [direction, setDirection] = useState("OUT"); // OUT = expense, IN = income
   const [category, setCategory] = useState("");
   const [account, setAccount] = useState("");
+  const [taxTag, setTaxTag] = useState("");
+  const [receiptTarget, setReceiptTarget] = useState(null);
 
-  const safeEntries = Array.isArray(entries) ? entries : [];
+  const safeEntries = useMemo(
+    () => (Array.isArray(entries) ? entries : []),
+    [entries]
+  );
+
+  const autoCategory = (text) => {
+    const lower = text.toLowerCase();
+    for (const rule of AUTO_RULES) {
+      if (rule.match.some((m) => lower.includes(m))) return rule.category;
+    }
+    return direction === "IN" ? "Income" : "Expenses";
+  };
 
   const addEntry = () => {
     const trimmedLabel = label.trim();
@@ -24,25 +54,36 @@ export default function DailyMoneyLedgerPanel() {
     const numeric = Number.parseFloat(trimmedAmount.replace(/[^0-9.-]/g, ""));
     if (Number.isNaN(numeric)) return;
 
+    const chosenCategory = category.trim() || autoCategory(trimmedLabel);
+
+    const entry = {
+      id: Date.now(),
+      label: trimmedLabel,
+      amount: numeric,
+      direction,
+      category: chosenCategory,
+      account: account.trim(),
+      taxTag: taxTag.trim(),
+      receipt: null,
+    };
+
     setEntries((current) => {
       const list = Array.isArray(current) ? current : [];
-      return [
-        ...list,
-        {
-          id: Date.now(),
-          label: trimmedLabel,
-          amount: numeric,
-          direction,
-          category: category.trim(),
-          account: account.trim(),
-        },
-      ];
+      return [...list, entry];
     });
 
     setAmount("");
     setLabel("");
     setCategory("");
     setAccount("");
+    setTaxTag("");
+
+    appendEvent({
+      panel: "Ledger",
+      category: chosenCategory,
+      action: "add-entry",
+      data: entry,
+    });
   };
 
   const removeEntry = (id) => {
@@ -74,6 +115,28 @@ export default function DailyMoneyLedgerPanel() {
     return `$${value.toFixed(2)}`;
   };
 
+  const burnRate =
+    safeEntries.length > 0 ? (totalOut / 1).toFixed(2) : "0.00";
+
+  const micro = (entry) => Math.abs(entry.amount) < 5;
+
+  const handleReceipt = (e, id) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setReceiptTarget(id);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setEntries((curr) =>
+        (curr || []).map((item) =>
+          item.id === id ? { ...item, receipt: reader.result } : item
+        )
+      );
+      setReceiptTarget(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   return (
     <section className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
       <div className="flex items-baseline justify-between mb-2">
@@ -86,8 +149,8 @@ export default function DailyMoneyLedgerPanel() {
       </div>
 
       <p className="text-sm opacity-80 mb-3 max-w-2xl">
-        Simple per-day log of money moving in and out. Local to this device.
-        Later this can sync with real accounts and reporting.
+        Per-day movement with auto-categorization, micro-transaction detection,
+        burn rate, and receipt capture. Stored locally.
       </p>
 
       {!isHydrated ? (
@@ -95,7 +158,7 @@ export default function DailyMoneyLedgerPanel() {
       ) : (
         <>
           {/* Summary strip */}
-          <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+          <div className="grid grid-cols-4 gap-2 text-xs mb-3">
             <div className="border border-white/30 px-3 py-2">
               <p className="tracking-[0.18em] uppercase opacity-60 mb-1">
                 In
@@ -125,6 +188,12 @@ export default function DailyMoneyLedgerPanel() {
                 {formatMoney(net)}
               </p>
             </div>
+            <div className="border border-white/30 px-3 py-2">
+              <p className="tracking-[0.18em] uppercase opacity-60 mb-1">
+                Burn Rate
+              </p>
+              <p className="text-sm">${burnRate}/day</p>
+            </div>
           </div>
 
           {/* Input row */}
@@ -153,10 +222,20 @@ export default function DailyMoneyLedgerPanel() {
               </select>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <input
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Category (food, bills, work, etc.)"
+                className="flex-1 bg-black/60 border border-white/30 px-3 py-2 text-xs outline-none focus:border-white/80"
+              >
+                <option value="">Auto</option>
+                {SUBCATEGORIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+              <input
+                value={taxTag}
+                onChange={(e) => setTaxTag(e.target.value)}
+                placeholder="Tax tag (deductible, VAT, etc.)"
                 className="flex-1 bg-black/60 border border-white/30 px-3 py-2 text-xs outline-none focus:border-white/80"
               />
               <input
@@ -215,7 +294,38 @@ export default function DailyMoneyLedgerPanel() {
                             {entry.account}
                           </span>
                         ) : null}
+                        {entry.taxTag ? (
+                          <span className="text-[10px] uppercase tracking-[0.18em] border border-emerald-400 px-2 py-[1px] text-emerald-200">
+                            {entry.taxTag}
+                          </span>
+                        ) : null}
+                        {micro(entry) ? (
+                          <span className="text-[10px] uppercase tracking-[0.18em] border border-amber-300 px-2 py-[1px] text-amber-200">
+                            micro
+                          </span>
+                        ) : null}
                       </div>
+                      <div className="flex gap-2 text-[11px] opacity-70 flex-wrap">
+                        <label className="underline cursor-pointer">
+                          Receipt
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleReceipt(e, entry.id)}
+                            className="hidden"
+                          />
+                        </label>
+                        {receiptTarget === entry.id ? (
+                          <span>Saving…</span>
+                        ) : null}
+                      </div>
+                      {entry.receipt ? (
+                        <img
+                          src={entry.receipt}
+                          alt="Receipt"
+                          className="h-16 mt-1 border border-white/30 object-contain"
+                        />
+                      ) : null}
                     </div>
                     <button
                       type="button"
