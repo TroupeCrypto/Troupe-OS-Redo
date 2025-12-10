@@ -122,7 +122,7 @@ export default function HomePage() {
         <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
-              Money
+              <MoneySnapshotPanel />
             </p>
             <h2 className="text-lg sm:text-xl">Money Overview</h2>
           </div>
