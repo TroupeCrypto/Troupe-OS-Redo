@@ -1,7 +1,7 @@
 // components/TodayFocusPanel.js
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDailyPersistentState } from "../lib/useDailyPersistentState";
 import { useEventLog } from "../lib/useEventLog";
 
@@ -32,7 +32,7 @@ export default function TodayFocusPanel() {
     minutes: 25,
   });
   const [rewardDraft, setRewardDraft] = useState("");
-  const [tick, setTick] = useState(Date.now());
+  const [tick, setTick] = useState(0);
 
   const safeState = useMemo(
     () => ({
@@ -49,18 +49,22 @@ export default function TodayFocusPanel() {
 
   // Heartbeat for countdowns
   useEffect(() => {
+    setTick(Date.now());
     const id = window.setInterval(() => setTick(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
 
   const lockedTasks = safeState.tasks.filter((t) => t.locked);
 
-  const updateState = (patch) => {
-    setState((current) => ({
-      ...(current || DEFAULT_STATE),
-      ...patch,
-    }));
-  };
+  const updateState = useCallback(
+    (patch) => {
+      setState((current) => ({
+        ...(current || DEFAULT_STATE),
+        ...patch,
+      }));
+    },
+    [setState]
+  );
 
   const addTask = () => {
     const trimmed = taskDraft.trim();
@@ -143,6 +147,7 @@ export default function TodayFocusPanel() {
   };
 
   const startBlock = (id) => {
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     const updated = safeState.blocks.map((b) =>
       b.id === id
@@ -156,17 +161,20 @@ export default function TodayFocusPanel() {
     updateState({ blocks: updated });
   };
 
-  const stopBlock = (id, finished = false) => {
-    const updated = safeState.blocks.map((b) =>
-      b.id === id
-        ? {
-            ...b,
-            status: finished ? "done" : "idle",
-          }
-        : b
-    );
-    updateState({ blocks: updated });
-  };
+  const stopBlock = useCallback(
+    (id, finished = false) => {
+      const updated = safeState.blocks.map((b) =>
+        b.id === id
+          ? {
+              ...b,
+              status: finished ? "done" : "idle",
+            }
+          : b
+      );
+      updateState({ blocks: updated });
+    },
+    [safeState.blocks, updateState]
+  );
 
   const addReward = () => {
     const label = rewardDraft.trim();
@@ -223,7 +231,7 @@ export default function TodayFocusPanel() {
         data: { label: activeRunningBlock.label },
       });
     }
-  }, [activeRunningBlock, runningRemaining]);
+  }, [activeRunningBlock, runningRemaining, stopBlock, appendEvent]);
 
   if (!isHydrated) {
     return (

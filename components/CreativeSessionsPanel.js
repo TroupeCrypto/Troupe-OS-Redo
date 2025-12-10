@@ -32,6 +32,8 @@ export default function CreativeSessionsPanel() {
     () => (Array.isArray(sessions) ? sessions : []),
     [sessions]
   );
+  // eslint-disable-next-line react-hooks/purity
+  const nowTs = useMemo(() => Date.now(), []);
 
   useEffect(() => {
     if (safeSessions.length > 0) {
@@ -123,7 +125,7 @@ export default function CreativeSessionsPanel() {
   const streakCount = streakData.days?.length || 0;
 
   const stalled =
-    safeSessions.filter((s) => Date.now() - s.startedAt > 90 * 60 * 1000)
+    safeSessions.filter((s) => nowTs - s.startedAt > 90 * 60 * 1000)
       .length > 0;
 
   return (

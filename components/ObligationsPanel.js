@@ -5,6 +5,11 @@ import { useDailyPersistentState } from "../lib/useDailyPersistentState";
 import { useEventLog } from "../lib/useEventLog";
 import { useMemo, useState } from "react";
 
+const makeId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `ob-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const SUBTABS = ["Bills", "Legal", "Deadlines", "People", "Recurring"];
 const RECURRENCE = ["none", "weekly", "monthly"];
 
@@ -20,6 +25,8 @@ export default function ObligationsPanel() {
   const [legalTag, setLegalTag] = useState("");
   const [amount, setAmount] = useState("");
   const [uploadingId, setUploadingId] = useState(null);
+  // eslint-disable-next-line react-hooks/purity
+  const nowTs = useMemo(() => Date.now(), []);
 
   const safeItems = useMemo(
     () => (Array.isArray(items) ? items : []),
@@ -75,7 +82,7 @@ export default function ObligationsPanel() {
       const nextDue = nextDueDate(changed.due, changed.recurring);
       const nextItem = {
         ...changed,
-        id: Date.now() + 1,
+        id: makeId(),
         due: nextDue,
         done: false,
       };
@@ -107,10 +114,10 @@ export default function ObligationsPanel() {
 
   const riskLevel = (item) => {
     if (!item.due) return "none";
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date(nowTs).toISOString().slice(0, 10);
     if (item.due <= today) return "critical";
     const delta =
-      (new Date(item.due).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+      (new Date(item.due).getTime() - nowTs) / (1000 * 60 * 60 * 24);
     if (delta <= 2) return "high";
     if (delta <= 5) return "medium";
     return "low";

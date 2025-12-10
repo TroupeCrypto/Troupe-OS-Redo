@@ -33,7 +33,10 @@ export default function DailyMoneyLedgerPanel() {
   const [taxTag, setTaxTag] = useState("");
   const [receiptTarget, setReceiptTarget] = useState(null);
 
-  const safeEntries = Array.isArray(entries) ? entries : [];
+  const safeEntries = useMemo(
+    () => (Array.isArray(entries) ? entries : []),
+    [entries]
+  );
 
   const autoCategory = (text) => {
     const lower = text.toLowerCase();

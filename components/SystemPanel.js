@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePersistentState } from "../lib/usePersistentState";
 import { collectOsState, restoreOsState } from "../lib/osState";
 import { encryptJson } from "../lib/secureStorage";
@@ -60,50 +60,16 @@ export default function SystemPanel() {
     () => window?.localStorage?.getItem("system_next_backup") || ""
   );
 
-  const dayCounts = {
-    focus: Object.keys(focusByDay || {}).length,
-    obligations: Object.keys(obligationsByDay || {}).length,
-    sessions: Object.keys(sessionsByDay || {}).length,
-    ledger: Object.keys(ledgerByDay || {}).length,
-    health: Object.keys(healthByDay || {}).length,
-  };
-
-  // Security simulator
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      const event = {
-        id: Date.now(),
-        ts: new Date().toISOString(),
-        status: Math.random() > 0.8 ? "alert" : "ok",
-        detail:
-          Math.random() > 0.8
-            ? "Suspicious token usage detected"
-            : "All subsystems nominal",
-      };
-      setSecurityEvents((curr) => {
-        const list = Array.isArray(curr) ? curr : [];
-        return [...list.slice(-20), event];
-      });
-    }, 8000);
-    return () => window.clearInterval(timer);
-  }, [setSecurityEvents]);
-
-  // Backup scheduler tick
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (!nextBackup) return;
-      const due = new Date(nextBackup).getTime();
-      if (Date.now() >= due) {
-        handleDownloadBackup();
-        const next = new Date(Date.now() + 24 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 16);
-        setNextBackup(next);
-        window.localStorage.setItem("system_next_backup", next);
-      }
-    }, 60000);
-    return () => window.clearInterval(timer);
-  }, [nextBackup]);
+  const dayCounts = useMemo(
+    () => ({
+      focus: Object.keys(focusByDay || {}).length,
+      obligations: Object.keys(obligationsByDay || {}).length,
+      sessions: Object.keys(sessionsByDay || {}).length,
+      ledger: Object.keys(ledgerByDay || {}).length,
+      health: Object.keys(healthByDay || {}).length,
+    }),
+    [focusByDay, obligationsByDay, sessionsByDay, ledgerByDay, healthByDay]
+  );
 
   const handleResetAll = () => {
     if (typeof window === "undefined") return;
@@ -126,7 +92,7 @@ export default function SystemPanel() {
     }
   };
 
-  const handleDownloadBackup = () => {
+  const handleDownloadBackup = useCallback(() => {
     if (typeof window === "undefined") return;
     const state = collectOsState();
     if (!state) return;
@@ -142,7 +108,7 @@ export default function SystemPanel() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
   const handleUploadBackup = (event) => {
     if (typeof window === "undefined") return;
@@ -159,12 +125,12 @@ export default function SystemPanel() {
         );
         if (!confirmed) return;
         restoreOsState(parsed);
-        window.location.reload();
-      } catch (err) {
-        console.error("Failed to parse backup file", err);
-        window.alert("Invalid backup file.");
-      }
-    };
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to parse backup file", err);
+      window.alert("Invalid backup file.");
+    }
+  };
     reader.readAsText(file);
     event.target.value = "";
   };
@@ -272,6 +238,43 @@ export default function SystemPanel() {
     ],
     [dayCounts, scratchpad]
   );
+
+  // Security simulator
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const event = {
+        id: Date.now(),
+        ts: new Date().toISOString(),
+        status: Math.random() > 0.8 ? "alert" : "ok",
+        detail:
+          Math.random() > 0.8
+            ? "Suspicious token usage detected"
+            : "All subsystems nominal",
+      };
+      setSecurityEvents((curr) => {
+        const list = Array.isArray(curr) ? curr : [];
+        return [...list.slice(-20), event];
+      });
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [setSecurityEvents]);
+
+  // Backup scheduler tick
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (!nextBackup) return;
+      const due = new Date(nextBackup).getTime();
+      if (Date.now() >= due) {
+        handleDownloadBackup();
+        const next = new Date(Date.now() + 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 16);
+        setNextBackup(next);
+        window.localStorage.setItem("system_next_backup", next);
+      }
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [nextBackup, handleDownloadBackup]);
 
   return (
     <div className="px-4 py-3 sm:px-6 sm:py-4">

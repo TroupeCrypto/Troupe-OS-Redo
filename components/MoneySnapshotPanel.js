@@ -66,8 +66,10 @@ export default function MoneySnapshotPanel() {
 
   const lastHistory = snapshot.history?.slice(-1)[0];
   const currentTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+  // eslint-disable-next-line react-hooks/purity
+  const nowTs = useMemo(() => Date.now(), []);
   const delta24 =
-    lastHistory && Date.now() - new Date(lastHistory.ts).getTime() <= 86400000
+    lastHistory && nowTs - new Date(lastHistory.ts).getTime() <= 86400000
       ? currentTotal - lastHistory.total
       : null;
 
