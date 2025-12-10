@@ -9,6 +9,7 @@ import CreativeSessionsPanel from "../components/CreativeSessionsPanel";
 import DailyMoneyLedgerPanel from "../components/DailyMoneyLedgerPanel";
 import HealthEnergyPanel from "../components/HealthEnergyPanel";
 import SystemPanel from "../components/SystemPanel";
+import AnalyticsPanel from "../components/AnalyticsPanel";
 
 export default function HomePage() {
   return (
@@ -197,6 +198,9 @@ export default function HomePage() {
         <ScratchpadPanel />
         <HistoryViewerPanel />
       </section>
+
+      {/* Analytics */}
+      <AnalyticsPanel />
 
       {/* System */}
       <section className="border-b border-white/40">
