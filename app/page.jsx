@@ -5,6 +5,8 @@ import ObligationsPanel from "../components/ObligationsPanel";
 import ScratchpadPanel from "../components/ScratchpadPanel";
 import MoneySnapshotPanel from "../components/MoneySnapshotPanel";
 import HistoryViewerPanel from "../components/HistoryViewerPanel";
+import CreativeSessionsPanel from "../components/CreativeSessionsPanel";
+import DailyMoneyLedgerPanel from "../components/DailyMoneyLedgerPanel";
 
 export default function HomePage() {
   return (
@@ -83,19 +85,10 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Sessions */}
-        <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
-          <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
-            Sessions
-          </h3>
-          <p className="text-sm opacity-80 max-w-xl">
-            Log current ideas, works-in-progress, and what needs recording next.
-            In a later phase, this will connect to a session log and vault of
-            stems, drafts, and notes.
-          </p>
-        </div>
+        {/* Sessions (live, daily) */}
+        <CreativeSessionsPanel />
 
-        {/* Releases */}
+        {/* Releases (shell for future state) */}
         <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
           <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
             Releases
@@ -106,7 +99,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Pipelines */}
+        {/* Pipelines (shell for future automations) */}
         <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
           <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
             Pipelines
@@ -123,15 +116,16 @@ export default function HomePage() {
         <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
-              <MoneySnapshotPanel />
+              Money
             </p>
             <h2 className="text-lg sm:text-xl">Money Overview</h2>
           </div>
           <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
-            Read-only shell · v0.1
+            Local Only · v0.1
           </p>
         </div>
 
+        {/* High-level structure description */}
         <div className="border-t border-white/40 grid grid-cols-1 md:grid-cols-3">
           {/* Cash & Accounts */}
           <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
@@ -175,11 +169,19 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+
+        {/* Local snapshot panel */}
+        <MoneySnapshotPanel />
+
+        {/* Daily ledger (per-day money movements) */}
+        <DailyMoneyLedgerPanel />
       </section>
 
-      {/* Scratchpad (persistent) */}
-       <ScratchpadPanel />
-       <HistoryViewerPanel />
+      {/* Notes & History */}
+      <section className="border-b border-white/40">
+        <ScratchpadPanel />
+        <HistoryViewerPanel />
+      </section>
 
       {/* Bottom Navigation Bar */}
       <footer className="sticky bottom-0 border-t border-white/40 bg-black/95 backdrop-blur px-2 py-2 flex justify-center">
