@@ -3,6 +3,7 @@
 import TodayFocusPanel from "../components/TodayFocusPanel";
 import ObligationsPanel from "../components/ObligationsPanel";
 import ScratchpadPanel from "../components/ScratchpadPanel";
+import MoneySnapshotPanel from "../components/MoneySnapshotPanel";
 
 export default function HomePage() {
   return (
