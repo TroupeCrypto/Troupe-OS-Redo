@@ -4,6 +4,7 @@ import TodayFocusPanel from "../components/TodayFocusPanel";
 import ObligationsPanel from "../components/ObligationsPanel";
 import ScratchpadPanel from "../components/ScratchpadPanel";
 import MoneySnapshotPanel from "../components/MoneySnapshotPanel";
+import HistoryViewerPanel from "../components/HistoryViewerPanel";
 
 export default function HomePage() {
   return (
@@ -177,7 +178,8 @@ export default function HomePage() {
       </section>
 
       {/* Scratchpad (persistent) */}
-      <ScratchpadPanel />
+       <ScratchpadPanel />
+       <HistoryViewerPanel />
 
       {/* Bottom Navigation Bar */}
       <footer className="sticky bottom-0 border-t border-white/40 bg-black/95 backdrop-blur px-2 py-2 flex justify-center">
