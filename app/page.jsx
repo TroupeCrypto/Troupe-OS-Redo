@@ -1,0 +1,203 @@
+// app/page.jsx
+
+import TodayFocusPanel from "../components/TodayFocusPanel";
+import ObligationsPanel from "../components/ObligationsPanel";
+import ScratchpadPanel from "../components/ScratchpadPanel";
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-black text-white">
+      {/* Top Bar */}
+      <header className="border-b border-white/40 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] tracking-[0.25em] uppercase opacity-70">
+            Troupe OS · Control Surface
+          </p>
+          <p className="text-xs opacity-60 mt-1">System Online · v0.1</p>
+        </div>
+        <div className="text-[11px] opacity-60 tracking-[0.25em] uppercase">
+          Vercel
+        </div>
+      </header>
+
+      {/* Active Workspace / Today */}
+      <section className="border-b border-white/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4">
+          <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
+            Active Workspace
+          </p>
+          <h1 className="text-xl sm:text-2xl">Today</h1>
+          <p className="text-sm opacity-80 mt-2 max-w-xl">
+            Schedule, priorities, and one clear focus.
+          </p>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/40 px-3 py-[3px] text-[11px] tracking-[0.25em] uppercase">
+            <span className="opacity-80">System Online</span>
+            <span className="opacity-60">
+              First Goal: One Reliable Control Screen
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Today / Command Center */}
+      <section className="border-b border-white/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
+              Today
+            </p>
+            <h2 className="text-lg sm:text-xl">Command Center</h2>
+          </div>
+          <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
+            Live Now
+          </p>
+        </div>
+
+        <div className="border-t border-white/40">
+          <TodayFocusPanel />
+        </div>
+
+        <div className="border-t border-white/40">
+          <ObligationsPanel />
+        </div>
+      </section>
+
+      {/* Creative Studio */}
+      <section className="border-b border-white/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
+              ZIG ZAG · Art · Drops
+            </p>
+            <h2 className="text-lg sm:text-xl">Creative Studio</h2>
+          </div>
+        </div>
+
+        {/* Intro */}
+        <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
+          <p className="text-sm opacity-80 max-w-2xl">
+            Entry point to music, visuals, and releases. This is where creative
+            work is captured and pushed toward the world.
+          </p>
+        </div>
+
+        {/* Sessions */}
+        <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
+          <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+            Sessions
+          </h3>
+          <p className="text-sm opacity-80 max-w-xl">
+            Log current ideas, works-in-progress, and what needs recording next.
+            In a later phase, this will connect to a session log and vault of
+            stems, drafts, and notes.
+          </p>
+        </div>
+
+        {/* Releases */}
+        <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
+          <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+            Releases
+          </h3>
+          <p className="text-sm opacity-80 max-w-xl">
+            Track songs, art pieces, drops, and which stage they&apos;re in:
+            idea, in progress, ready, scheduled, released.
+          </p>
+        </div>
+
+        {/* Pipelines */}
+        <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
+          <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+            Pipelines
+          </h3>
+          <p className="text-sm opacity-80 max-w-xl">
+            Later this will connect to distribution, storefronts, campaigns, and
+            automations that push work into the world without manual overhead.
+          </p>
+        </div>
+      </section>
+
+      {/* Money Overview */}
+      <section className="border-b border-white/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
+              Money
+            </p>
+            <h2 className="text-lg sm:text-xl">Money Overview</h2>
+          </div>
+          <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
+            Read-only shell · v0.1
+          </p>
+        </div>
+
+        <div className="border-t border-white/40 grid grid-cols-1 md:grid-cols-3">
+          {/* Cash & Accounts */}
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
+            <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+              Cash &amp; Accounts
+            </h3>
+            <p className="text-[11px] opacity-60 mb-1">
+              Manual inputs → later: live sync
+            </p>
+            <p className="text-sm opacity-80 max-w-xs">
+              High-level view of balances, wallets, and accounts. Starts as a
+              planning surface before it connects to live data.
+            </p>
+          </div>
+
+          {/* Upcoming Obligations */}
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
+            <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+              Upcoming Obligations
+            </h3>
+            <p className="text-[11px] opacity-60 mb-1">
+              Bills, renewals, non-negotiables
+            </p>
+            <p className="text-sm opacity-80 max-w-xs">
+              This panel will eventually align money with time: what is due,
+              when it hits, and how it impacts today&apos;s choices.
+            </p>
+          </div>
+
+          {/* Opportunities */}
+          <div className="px-4 py-3 sm:px-6 sm:py-4">
+            <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+              Opportunities
+            </h3>
+            <p className="text-[11px] opacity-60 mb-1">
+              Deals, drops, leverage points
+            </p>
+            <p className="text-sm opacity-80 max-w-xs">
+              A surface for tracking leverage: pending sales, drops, and
+              one-off chances to move the needle financially.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Scratchpad (persistent) */}
+      <ScratchpadPanel />
+
+      {/* Bottom Navigation Bar */}
+      <footer className="sticky bottom-0 border-t border-white/40 bg-black/95 backdrop-blur px-2 py-2 flex justify-center">
+        <nav className="flex gap-1 text-[11px]">
+          <span className="px-3 py-1 border border-white/80 rounded-full tracking-[0.18em] uppercase">
+            Today
+          </span>
+          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+            Money
+          </span>
+          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+            Creative Studio
+          </span>
+          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+            Health &amp; Energy
+          </span>
+          <span className="px-3 py-1 border border-white/40 rounded-full tracking-[0.18em] uppercase opacity-70">
+            System
+          </span>
+        </nav>
+      </footer>
+    </main>
+  );
+}
