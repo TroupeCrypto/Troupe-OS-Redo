@@ -15,6 +15,7 @@ import SystemPanel from "../components/SystemPanel";
 import AnalyticsPanel from "../components/AnalyticsPanel";
 import AuthGatePanel from "../components/AuthGatePanel";
 import AuditLogPanel from "../components/AuditLogPanel";
+import SessionStatusPanel from "../components/SessionStatusPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
 const SESSION_KEY = "troupe_os_auth_session_expiry";
@@ -164,6 +165,9 @@ export default function HomePage() {
           )}
         </div>
       </header>
+
+      {/* NEW: Session status strip (upgrade, no deletions) */}
+      <SessionStatusPanel />
 
       {/* Active Workspace / Today (always visible) */}
       <section id="section-today" className="border-b border-white/40">
