@@ -16,6 +16,7 @@ import AnalyticsPanel from "../components/AnalyticsPanel";
 import AuthGatePanel from "../components/AuthGatePanel";
 import AuditLogPanel from "../components/AuditLogPanel";
 import SessionStatusPanel from "../components/SessionStatusPanel";
+import TroupeCompanyAtlasPanel from "../components/TroupeCompanyAtlasPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
 // Publishing panels (additive imports)
@@ -442,8 +443,13 @@ export default function HomePage() {
           id="section-system"
           className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
         >
-          <SystemPanel />
-          <AuditLogPanel />
+          <TroupeCompanyAtlasPanel />
+          <div className="mt-4">
+            <SystemPanel />
+          </div>
+          <div className="mt-4">
+            <AuditLogPanel />
+          </div>
         </section>
       )}
 
