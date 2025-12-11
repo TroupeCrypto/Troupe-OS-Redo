@@ -18,6 +18,10 @@ import AuditLogPanel from "../components/AuditLogPanel";
 import SessionStatusPanel from "../components/SessionStatusPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
+// NEW: Publishing panels (additive import)
+import PublicationPlannerPanel from "../components/PublicationPlannerPanel";
+import ArticleEditorPanel from "../components/ArticleEditorPanel";
+
 const SESSION_KEY = "troupe_os_auth_state_v1";
 
 function loadInitialSessionState() {
@@ -285,8 +289,8 @@ export default function HomePage() {
               </p>
               <h2 className="text-lg sm:text-xl">Music · Art · Drops</h2>
               <p className="text-sm opacity-80 mt-2 max-w-xl">
-                Sessions, releases, and pipelines for anything that needs
-                creative energy.
+                Sessions, releases, publishing, and pipelines for anything that
+                needs creative energy.
               </p>
             </div>
             <div className="text-[11px] opacity-70">
@@ -298,7 +302,23 @@ export default function HomePage() {
           {/* Creative Sessions (already wired) */}
           {showCreativeSection && <CreativeSessionsPanel />}
 
-          {/* Releases (shell for future state) */}
+          {/* NEW: Publishing Workspace (Planner + Editor) */}
+          <div className="border-t border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel">
+            <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
+              Publishing Workspace
+            </h3>
+            <p className="text-sm opacity-80 max-w-xl mb-3">
+              Plan publications and issues on the left, and draft or edit
+              articles on the right. This powers digital and future physical
+              editions for music, art, crypto, cannabis, and collectibles.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <PublicationPlannerPanel />
+              <ArticleEditorPanel />
+            </div>
+          </div>
+
+          {/* Releases (existing shell for future state) */}
           <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Releases
@@ -309,7 +329,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Pipelines (shell for future automations) */}
+          {/* Pipelines (existing shell for future automations) */}
           <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Pipelines
