@@ -18,58 +18,59 @@ import AuditLogPanel from "../components/AuditLogPanel";
 import SessionStatusPanel from "../components/SessionStatusPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
-const SESSION_KEY = "troupe_os_auth_session_expiry";
+const SESSION_KEY = "troupe_os_auth_state_v1";
+
+function loadInitialSessionState() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveSessionState(next) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
 
 export default function HomePage() {
   const [unlocked, setUnlocked] = useState(false);
-  const [sessionExpiry, setSessionExpiry] = useState(null);
+  const [lastUnlock, setLastUnlock] = useState(null);
   const { mode, setMode } = useRoleMode();
 
-  // Honor any active session created by AuthGatePanel
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem(SESSION_KEY);
-      if (!stored) return;
-      const expiry = Number(stored);
-      if (!Number.isFinite(expiry)) return;
-
-      setSessionExpiry(expiry);
-      if (Date.now() < expiry) {
-        setUnlocked(true);
-      }
-    } catch (err) {
-      console.error("Failed to load auth session in HomePage", err);
+    const initial = loadInitialSessionState();
+    if (initial?.unlocked) {
+      setUnlocked(true);
+      setLastUnlock(initial.lastUnlock ?? null);
     }
   }, []);
 
+  useEffect(() => {
+    const payload = {
+      unlocked,
+      lastUnlock,
+    };
+    saveSessionState(payload);
+  }, [unlocked, lastUnlock]);
+
   const handleUnlock = ({ profileId, roleMode } = {}) => {
     setUnlocked(true);
+    setLastUnlock(new Date().toISOString());
     if (roleMode) {
       setMode(roleMode);
     }
-    // Mirror the session expiry set by AuthGatePanel
-    if (typeof window !== "undefined") {
-      try {
-        const stored = window.localStorage.getItem(SESSION_KEY);
-        const expiry = stored ? Number(stored) : null;
-        if (Number.isFinite(expiry)) {
-          setSessionExpiry(expiry);
-        }
-      } catch {
-        // ignore
-      }
-    }
-    // profileId is available if you later want per-profile behavior
   };
 
-  const sessionRemainingSeconds =
-    sessionExpiry != null
-      ? Math.max(0, Math.floor((sessionExpiry - Date.now()) / 1000))
-      : null;
-
   const scrollToSection = (id) => {
-    if (typeof document === "undefined") return;
+    if (!id) return;
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -77,7 +78,7 @@ export default function HomePage() {
 
   if (!unlocked) {
     return (
-      <main className="min-h-screen bg-black text-white">
+      <main className="min-h-screen text-white/90">
         <AuthGatePanel onUnlock={handleUnlock} />
       </main>
     );
@@ -92,47 +93,82 @@ export default function HomePage() {
   const showCreativeSection =
     mode === "FOUNDER" || mode === "CREATIVE" || mode === "PUBLIC";
 
-  const showCreativeSessions = mode === "FOUNDER" || mode === "CREATIVE";
+  const showMoneySection =
+    mode === "FOUNDER" ||
+    mode === "FINANCE" ||
+    mode === "HEALTH" ||
+    mode === "PUBLIC";
 
-  const showMoneySection = mode === "FOUNDER" || mode === "FINANCE";
-
-  const showHealthSection = mode === "FOUNDER" || mode === "HEALTH";
+  const showHealthSection =
+    mode === "FOUNDER" ||
+    mode === "HEALTH" ||
+    mode === "PUBLIC" ||
+    mode === "FINANCE";
 
   const showNotesHistory =
-    mode === "FOUNDER" || mode === "CREATIVE" || mode === "HEALTH";
+    mode === "FOUNDER" ||
+    mode === "CREATIVE" ||
+    mode === "PUBLIC" ||
+    mode === "HEALTH";
 
-  const showAnalytics = mode === "FOUNDER" || mode === "FINANCE";
+  const showAnalytics =
+    mode === "FOUNDER" ||
+    mode === "FINANCE" ||
+    mode === "PUBLIC" ||
+    mode === "CREATIVE";
 
-  const showSystem = mode === "FOUNDER" || mode === "FINANCE";
+  const showSystem = mode === "FOUNDER" || mode === "PUBLIC";
 
   const navItems = [
-    { id: "section-today", label: "Today", visible: showTodayCommand },
-    { id: "section-money", label: "Money", visible: showMoneySection },
+    { id: "section-top", label: "Top", visible: true },
+    {
+      id: "section-today",
+      label: "Today",
+      visible: true,
+    },
+    {
+      id: "section-command",
+      label: "Command",
+      visible: showTodayCommand,
+    },
     {
       id: "section-creative",
-      label: "Creative Studio",
+      label: "Creative",
       visible: showCreativeSection,
     },
     {
+      id: "section-money",
+      label: "Money",
+      visible: showMoneySection,
+    },
+    {
       id: "section-health",
-      label: "Health & Energy",
+      label: "Health",
       visible: showHealthSection,
+    },
+    { id: "section-notes", label: "Notes", visible: showNotesHistory },
+    {
+      id: "section-analytics",
+      label: "Analytics",
+      visible: showAnalytics,
     },
     { id: "section-system", label: "System", visible: showSystem },
   ];
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen text-white/90">
       {/* Top Bar */}
       <header
         id="section-top"
-        className="border-b border-white/40 px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        className="glow-header border-b border-white/40 px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
           <p className="text-[11px] tracking-[0.25em] uppercase opacity-70">
-            Troupe OS · Control Surface
+            <span className="twitchy-text">Troupe OS · Control Surface</span>
           </p>
-          <p className="text-xs opacity-60 mt-1">System Online · v0.1</p>
+          <p className="text-xs opacity-60 mt-1">
+            <span className="twitchy-text">System Online · v0.1</span>
+          </p>
           <p className="mt-1 text-[10px] opacity-60">
             Mode: {mode.toLowerCase()}
           </p>
@@ -142,25 +178,30 @@ export default function HomePage() {
             Vercel
           </div>
           <div className="flex flex-wrap justify-end gap-1 text-[10px]">
-            {ROLE_MODES.map((role) => (
+            {Object.entries(ROLE_MODES).map(([key, value]) => (
               <button
-                key={role}
+                key={key}
                 type="button"
-                onClick={() => setMode(role)}
-                className={
-                  "px-2 py-[3px] border rounded-full tracking-[0.18em] uppercase " +
-                  (mode === role
-                    ? "border-white/90"
-                    : "border-white/30 opacity-70")
-                }
+                onClick={() => setMode(key)}
+                className={`px-2.5 py-[3px] border rounded-full tracking-[0.18em] uppercase ${
+                  mode === key
+                    ? "border-white/80 bg-white/10"
+                    : "border-white/30 opacity-80 hover:opacity-100"
+                }`}
               >
-                {role}
+                {value.label}
               </button>
             ))}
           </div>
-          {sessionRemainingSeconds != null && (
-            <div className="text-[10px] opacity-70">
-              Session ≈ {Math.floor(sessionRemainingSeconds / 60)} min left
+          {lastUnlock && (
+            <div className="text-[10px] opacity-60">
+              Last unlock:{" "}
+              {new Date(lastUnlock).toLocaleString(undefined, {
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           )}
         </div>
@@ -170,7 +211,10 @@ export default function HomePage() {
       <SessionStatusPanel />
 
       {/* Active Workspace / Today (always visible) */}
-      <section id="section-today" className="border-b border-white/40">
+      <section
+        id="section-today"
+        className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+      >
         <div className="px-4 py-3 sm:px-6 sm:py-4">
           <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
             Active Workspace
@@ -190,24 +234,39 @@ export default function HomePage() {
 
       {/* Today / Command Center */}
       {showTodayCommand && (
-        <section className="border-b border-white/40">
-          <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+        <section
+          id="section-command"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
+          <div className="px-4 py-3 sm:px-6 sm:py-4 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
-                Today
+                Command Center
               </p>
-              <h2 className="text-lg sm:text-xl">Command Center</h2>
+              <h2 className="text-lg sm:text-xl">Daily Control Stack</h2>
+              <p className="text-sm opacity-80 mt-2 max-w-xl">
+                Focus, obligations, and scratchpad are the three most
+                important surfaces for everyday control.
+              </p>
             </div>
-            <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
-              Live Now
-            </p>
+            <div className="text-[11px] opacity-70">
+              <p className="tracking-[0.25em] uppercase mb-1">Today</p>
+              <p>
+                {new Date().toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
           </div>
 
-          <div className="border-t border-white/40">
+          <div className="border-t border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel">
             <TodayFocusPanel />
           </div>
 
-          <div className="border-t border-white/40">
+          <div className="border-t border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel">
             <ObligationsPanel />
           </div>
         </section>
@@ -215,26 +274,29 @@ export default function HomePage() {
 
       {/* Creative Studio */}
       {showCreativeSection && (
-        <section id="section-creative" className="border-b border-white/40">
-          <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+        <section
+          id="section-creative"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
+          <div className="px-4 py-3 sm:px-6 sm:py-4 flex flex-col md:flex-row gap-4 md:items-start md:justify-between">
             <div>
               <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
-                ZIG ZAG · Art · Drops
+                Creative Studio
               </p>
-              <h2 className="text-lg sm:text-xl">Creative Studio</h2>
+              <h2 className="text-lg sm:text-xl">Music · Art · Drops</h2>
+              <p className="text-sm opacity-80 mt-2 max-w-xl">
+                Sessions, releases, and pipelines for anything that needs
+                creative energy.
+              </p>
+            </div>
+            <div className="text-[11px] opacity-70">
+              <p className="tracking-[0.25em] uppercase mb-1">State</p>
+              <p>Local Only · v0.1</p>
             </div>
           </div>
 
-          {/* Intro */}
-          <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
-            <p className="text-sm opacity-80 max-w-2xl">
-              Entry point to music, visuals, and releases. This is where
-              creative work is captured and pushed toward the world.
-            </p>
-          </div>
-
-          {/* Sessions (live, daily) – hidden in PUBLIC mode */}
-          {showCreativeSessions && <CreativeSessionsPanel />}
+          {/* Creative Sessions (already wired) */}
+          {showCreativeSection && <CreativeSessionsPanel />}
 
           {/* Releases (shell for future state) */}
           <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
@@ -253,70 +315,33 @@ export default function HomePage() {
               Pipelines
             </h3>
             <p className="text-sm opacity-80 max-w-xl">
-              Later this will connect to distribution, storefronts, campaigns,
-              and automations that push work into the world without manual
-              overhead.
+              A view we can later wire to automation jobs: posting, metadata,
+              NFTs, or cross-posting to different platforms.
             </p>
           </div>
         </section>
       )}
 
-      {/* Money Overview */}
+      {/* Money */}
       {showMoneySection && (
-        <section id="section-money" className="border-b border-white/40">
-          <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
+        <section
+          id="section-money"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
+          <div className="px-4 py-3 sm:px-6 sm:py-4 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
                 Money
               </p>
-              <h2 className="text-lg sm:text-xl">Money Overview</h2>
-            </div>
-            <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
-              Local Only · v0.1
-            </p>
-          </div>
-
-          <div className="border-t border-white/40 grid grid-cols-1 md:grid-cols-3">
-            {/* Cash & Accounts */}
-            <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
-              <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
-                Cash &amp; Accounts
-              </h3>
-              <p className="text-[11px] opacity-60 mb-1">
-                Manual inputs → later: live sync
-              </p>
-              <p className="text-sm opacity-80 max-w-xs">
-                High-level view of balances, wallets, and accounts. Starts as a
-                planning surface before it connects to live data.
+              <h2 className="text-lg sm:text-xl">Snapshot & Daily Flow</h2>
+              <p className="text-sm opacity-80 mt-2 max-w-xl">
+                High-level positions plus a line-by-line ledger of where every
+                dollar is going.
               </p>
             </div>
-
-            {/* Upcoming Obligations */}
-            <div className="px-4 py-3 sm:px-6 sm:py-4 border-b md:border-b-0 md:border-r border-white/20">
-              <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
-                Upcoming Obligations
-              </h3>
-              <p className="text-[11px] opacity-60 mb-1">
-                Bills, renewals, non-negotiables
-              </p>
-              <p className="text-sm opacity-80 max-w-xs">
-                This panel will eventually align money with time: what is due,
-                when it hits, and how it impacts today&apos;s choices.
-              </p>
-            </div>
-
-            {/* Opportunities */}
-            <div className="px-4 py-3 sm:px-6 sm:py-4">
-              <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
-                Opportunities
-              </h3>
-              <p className="text-[11px] opacity-60 mb-1">
-                Deals, drops, leverage points
-              </p>
-              <p className="text-sm opacity-80 max-w-xs">
-                A surface for tracking leverage: pending sales, drops, and
-                one-off chances to move the needle financially.
-              </p>
+            <div className="text-[11px] opacity-70">
+              <p className="tracking-[0.25em] uppercase mb-1">Status</p>
+              <p>Local Only · v0.1</p>
             </div>
           </div>
 
@@ -327,17 +352,25 @@ export default function HomePage() {
 
       {/* Health & Energy */}
       {showHealthSection && (
-        <section id="section-health" className="border-b border-white/40">
+        <section
+          id="section-health"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
           <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-baseline justify-between">
             <div>
               <p className="text-[11px] tracking-[0.25em] uppercase opacity-70 mb-1">
-                Health &amp; Energy
+                Health & Energy
               </p>
-              <h2 className="text-lg sm:text-xl">Body · Battery · Mood</h2>
+              <h2 className="text-lg sm:text-xl">Body · Mood · Energy</h2>
+              <p className="text-sm opacity-80 mt-2 max-w-xl">
+                Track the basics that impact everything else: sleep, movement,
+                mood, and subjective energy.
+              </p>
             </div>
-            <p className="text-[10px] opacity-60 tracking-[0.25em] uppercase">
-              Local Only · v0.1
-            </p>
+            <div className="text-[11px] opacity-70">
+              <p className="tracking-[0.25em] uppercase mb-1">Status</p>
+              <p>Local Only · v0.1</p>
+            </div>
           </div>
 
           <HealthEnergyPanel />
@@ -346,7 +379,10 @@ export default function HomePage() {
 
       {/* Notes & History */}
       {showNotesHistory && (
-        <section id="section-notes" className="border-b border-white/40">
+        <section
+          id="section-notes"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
           <ScratchpadPanel />
           <HistoryViewerPanel />
         </section>
@@ -354,14 +390,20 @@ export default function HomePage() {
 
       {/* Analytics */}
       {showAnalytics && (
-        <section id="section-analytics" className="border-b border-white/40">
+        <section
+          id="section-analytics"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
           <AnalyticsPanel />
         </section>
       )}
 
       {/* System */}
       {showSystem && (
-        <section id="section-system" className="border-b border-white/40">
+        <section
+          id="section-system"
+          className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
+        >
           <SystemPanel />
           <AuditLogPanel />
         </section>
@@ -378,13 +420,13 @@ export default function HomePage() {
                 type="button"
                 onClick={() => scrollToSection(item.id)}
                 className={
-                  "px-3 py-1 border rounded-full tracking-[0.18em] uppercase " +
+                  "px-3 py-1 border rounded-full tracking-[0.18em] uppercase neon-button " +
                   (idx === 0
                     ? "border-white/80"
                     : "border-white/40 opacity-70")
                 }
               >
-                {item.label}
+                <span className="twitchy-nav">{item.label}</span>
               </button>
             ))}
         </nav>
