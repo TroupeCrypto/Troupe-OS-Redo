@@ -18,10 +18,11 @@ import AuditLogPanel from "../components/AuditLogPanel";
 import SessionStatusPanel from "../components/SessionStatusPanel";
 import { useRoleMode, ROLE_MODES } from "../lib/useRoleMode";
 
-// NEW: Publishing panels (additive imports)
+// Publishing panels (additive imports)
 import PublicationPlannerPanel from "../components/PublicationPlannerPanel";
 import ArticleEditorPanel from "../components/ArticleEditorPanel";
 import ArticleReaderPanel from "../components/ArticleReaderPanel";
+import PublishingSummaryPanel from "../components/PublishingSummaryPanel";
 
 const SESSION_KEY = "troupe_os_auth_state_v1";
 
@@ -212,7 +213,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* NEW: Session status strip (upgrade, no deletions) */}
+      {/* Session status strip */}
       <SessionStatusPanel />
 
       {/* Active Workspace / Today (always visible) */}
@@ -228,7 +229,7 @@ export default function HomePage() {
           <p className="text-sm opacity-80 mt-2 max-w-xl">
             Schedule, priorities, and one clear focus.
           </p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border白/40 px-3 py-[3px] text-[11px] tracking-[0.25em] uppercase">
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/40 px-3 py-[3px] text-[11px] tracking-[0.25em] uppercase">
             <span className="opacity-80">System Online</span>
             <span className="opacity-60">
               First Goal: One Reliable Control Screen
@@ -300,7 +301,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Creative Sessions (already wired) */}
+          {/* Creative Sessions */}
           {showCreativeSection && <CreativeSessionsPanel />}
 
           {/* Publishing Workspace (Planner + Editor) */}
@@ -319,7 +320,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* NEW: Reading View (digital + future print layout preview) */}
+          {/* Reading View (digital + future print layout preview) */}
           <div className="border-t border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Reading View
@@ -332,7 +333,7 @@ export default function HomePage() {
             <ArticleReaderPanel />
           </div>
 
-          {/* Releases (existing shell for future state) */}
+          {/* Releases */}
           <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Releases
@@ -343,7 +344,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Pipelines (existing shell for future automations) */}
+          {/* Pipelines */}
           <div className="border-t border-white/40 px-4 py-3 sm:px-6 sm:py-4">
             <h3 className="text-xs tracking-[0.25em] uppercase mb-2">
               Pipelines
@@ -429,6 +430,9 @@ export default function HomePage() {
           className="border-b border-white/40 px-4 py-4 sm:px-6 sm:py-5 melty-panel"
         >
           <AnalyticsPanel />
+          <div className="mt-4">
+            <PublishingSummaryPanel />
+          </div>
         </section>
       )}
 
