@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import TodayFocusPanel from "../components/TodayFocusPanel";
 import ObligationsPanel from "../components/ObligationsPanel";
@@ -49,6 +50,7 @@ function saveSessionState(next) {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [unlocked, setUnlocked] = useState(false);
   const [lastUnlock, setLastUnlock] = useState(null);
   const { mode, setMode } = useRoleMode();
@@ -161,7 +163,23 @@ export default function HomePage() {
       visible: showAnalytics,
     },
     { id: "section-system", label: "System", visible: showSystem },
+    {
+      id: "family-business",
+      label: "Family Business",
+      visible: mode === "FOUNDER",
+      href: "/family-business",
+    },
   ];
+
+  const handleNavClick = (item) => {
+    if (item.href) {
+      router.push(item.href);
+      return;
+    }
+    if (item.id) {
+      scrollToSection(item.id);
+    }
+  };
 
   return (
     <main className="min-h-screen text-white/90">
@@ -470,7 +488,7 @@ export default function HomePage() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => scrollToSection(item.id)}
+                onClick={() => handleNavClick(item)}
                 className={
                   "px-3 py-1 border rounded-full tracking-[0.18em] uppercase neon-button " +
                   (idx === 0
