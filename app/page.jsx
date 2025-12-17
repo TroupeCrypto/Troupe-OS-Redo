@@ -1,6 +1,7 @@
 // app/page.jsx
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -218,6 +219,13 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+          <Link
+            href="/intuitive"
+            className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] opacity-80 transition hover:bg-white/10 hover:opacity-100"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.9)]" />
+            Open Intuitive View
+          </Link>
           {lastUnlock && (
             <div className="text-[10px] opacity-60">
               Last unlock:{" "}

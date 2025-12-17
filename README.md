@@ -11,7 +11,7 @@ Next.js App Router experience for the Troupe Inc. control surface. The interface
 - Notes and history viewer.
 - Analytics panel plus new Publishing Summary dashboard (Step 5) showing publishing telemetry from the publishing store.
 - System diagnostics and audit log.
-- Founder-only Family Business page (separate tab) for private capital, ledger, atlas, and audit controls.
+- Intuitive view page with quick-start links from the landing header.
 
 ## New in Step 5
 - Added `components/PublishingSummaryPanel.jsx` to present publishing counts, status, and domain breakdowns using `usePublishingStore`.
